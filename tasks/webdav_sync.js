@@ -58,7 +58,7 @@ var deleteFolderOnRemote = function(grunt, remoteURL, callback, configurationOpt
             var statusCode = parseInt(matches[1]);
             var statusMessage = matches[2];
 
-            if (statusCode === 404) { // we don't actually care if remote directories don't exist (yet)
+            if (statusCode === 404 || statusCode === 301) { // we don't actually care if remote directories don't exist (yet) or have been deleted.
                 callback(null, remoteURL);
             } else {
                 callback({status: statusCode, message: statusMessage}, null);
@@ -178,8 +178,15 @@ module.exports = function(grunt) {
 
         var files = grunt.file.expand(options.local_path);
 
-        var localPath = files[0];
-        files.splice(0, 1); // the first file is always the specified dir we remove it.
+        var localPath;
+
+        if(options.local_path === '**') { //special case for the top level.
+            localPath = '';
+        }
+        else {
+            localPath = files[0];
+            files.splice(0, 1); // the first file is always the specified dir we remove it.
+        }
 
         grunt.log.ok('Found ' + files.length + ' files, Start uploading files to ' + options.remote_path);
         grunt.verbose.writeln(grunt.log.wordlist(files));
