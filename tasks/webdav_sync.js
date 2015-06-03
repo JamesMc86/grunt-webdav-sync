@@ -45,8 +45,8 @@ var deleteFolderOnRemote = function(grunt, remoteURL, callback, configurationOpt
     var options = createRequestOptions(remoteURL, 'DELETE', configurationOptions);
 
     request(options, function(error, res, body) {
-        if(res.statusCode === 200 || res.statusCode === 204 || res.statusCode === 404) {
-            //OK, No Content, or Not Found; all good
+        if(res.statusCode === 200 || res.statusCode === 204 || res.statusCode === 404 || res.statusCode === 301) {
+            //OK, No Content, Not Found or already deleted; all good
             grunt.verbose.writeln("Folder: " + remoteURL + " deleted");
             callback(null, remoteURL);
         } else if (res.statusCode === 207) { // res.body contains an XML WebDAV multistatus message; see http://tools.ietf.org/search/rfc2518#section-11
@@ -178,15 +178,9 @@ module.exports = function(grunt) {
 
         var files = grunt.file.expand(options.local_path);
 
-        var localPath;
+        var localPath = files[0];
+        files.splice(0, 1); // the first file is always the specified dir we remove it.
 
-        if(options.local_path === '**') { //special case for the top level.
-            localPath = '';
-        }
-        else {
-            localPath = files[0];
-            files.splice(0, 1); // the first file is always the specified dir we remove it.
-        }
 
         grunt.log.ok('Found ' + files.length + ' files, Start uploading files to ' + options.remote_path);
         grunt.verbose.writeln(grunt.log.wordlist(files));
