@@ -42,10 +42,15 @@ var createRequestOptions = function(remoteURL, method, configurationOptions) {
 
 var deleteFolderOnRemote = function(grunt, remoteURL, callback, configurationOptions) {
     grunt.verbose.writeln("Deleting folder: " + remoteURL);
+
+    //Add trailing '/' as required by apache dav.
+    if(remoteURL.slice(-1) !== '/') {
+        remoteURL = remoteURL + '/';
+    }
     var options = createRequestOptions(remoteURL, 'DELETE', configurationOptions);
 
     request(options, function(error, res, body) {
-        if(res.statusCode === 200 || res.statusCode === 204 || res.statusCode === 404 || res.statusCode === 301) {
+        if(res.statusCode === 200 || res.statusCode === 204 || res.statusCode === 404) {
             //OK, No Content, Not Found or already deleted; all good
             grunt.verbose.writeln("Folder: " + remoteURL + " deleted");
             callback(null, remoteURL);
@@ -58,7 +63,7 @@ var deleteFolderOnRemote = function(grunt, remoteURL, callback, configurationOpt
             var statusCode = parseInt(matches[1]);
             var statusMessage = matches[2];
 
-            if (statusCode === 404 || statusCode === 301) { // we don't actually care if remote directories don't exist (yet) or have been deleted.
+            if (statusCode === 404) { // we don't actually care if remote directories don't exist (yet) or have been deleted.
                 callback(null, remoteURL);
             } else {
                 callback({status: statusCode, message: statusMessage}, null);
